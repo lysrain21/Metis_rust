@@ -1,0 +1,17 @@
+[package]
+name = "metis"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+petgraph = "0.6"
+
+[dev-dependencies]
+
+[lib]
+name = "metis"
+path = "src/lib.rs"
+
+[[example]]
+name = "demo"
+path = "examples/demo.rs"

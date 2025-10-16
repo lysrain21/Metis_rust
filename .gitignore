@@ -1,0 +1,57 @@
+# Rust build artifacts
+/target/
+/Cargo.lock
+
+# Debug and profiling
+*.pdb
+perf.data
+perf.data.old
+flamegraph.svg
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+*.sublime-*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Backup files
+*.bak
+*.tmp
+*.temp
+
+# Test and coverage
+*.profraw
+*.profdata
+coverage/
+lcov.info
+
+# Environment variables
+.env
+.env.local
+
+# Documentation build
+/doc/
+/docs/_build/
+
+# Logs
+*.log
