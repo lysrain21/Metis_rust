@@ -1,8 +1,8 @@
-use crate::{CLMMSimpleApprox, CLOBTopN, CPMMPool};
 use crate::core::candidates::generate_candidate_paths;
 use crate::core::constraints::RoutingConstraints;
 use crate::core::graph::RoutingGraph;
 use crate::core::splitter::{path_marginal_rate, waterfill};
+use crate::{CLMMSimpleApprox, CLOBTopN, CPMMPool};
 
 pub fn build_graph(
     ab_big_y: Option<f64>,
@@ -51,13 +51,7 @@ pub fn build_graph(
         "AX_clmm",
     );
 
-    let steps = clob_steps.unwrap_or_else(|| {
-        vec![
-            (1.010, 300.0),
-            (1.005, 500.0),
-            (1.000, 1e9),
-        ]
-    });
+    let steps = clob_steps.unwrap_or_else(|| vec![(1.010, 300.0), (1.005, 500.0), (1.000, 1e9)]);
 
     rg.add_pool_edge(
         "X",
@@ -86,12 +80,7 @@ pub fn run_scenario(title: &str, rg: &mut RoutingGraph, amount_in: f64, verbose:
             if s == "A" && d == "B" {
                 if let Some(pool) = rg.pools.get(&e.pool_id) {
                     let mu = pool.marginal_rate(0.0);
-                    println!(
-                        "  edge {}: mu0={:.6} kind={}",
-                        e.name,
-                        mu,
-                        pool.kind()
-                    );
+                    println!("  edge {}: mu0={:.6} kind={}", e.name, mu, pool.kind());
                 }
             }
         }
@@ -124,6 +113,10 @@ pub fn run_scenario(title: &str, rg: &mut RoutingGraph, amount_in: f64, verbose:
             r.estimated_out,
             r.min_amount_out
         );
-        println!("          path: {} | {}", nodes.join(" -> "), names.join(" + "));
+        println!(
+            "          path: {} | {}",
+            nodes.join(" -> "),
+            names.join(" + ")
+        );
     }
 }

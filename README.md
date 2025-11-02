@@ -1,12 +1,12 @@
 # Metis - DeFi Routing Optimizer
 
-A Rust implementation of a sophisticated DeFi routing optimizer that finds optimal trading paths across multiple liquidity sources using the waterfill algorithm.
+A Rust implementation of a sophisticated DeFi routing optimizer that finds optimal trading paths across multiple liquidity sources using streaming path discovery and configurable allocation algorithms (waterfill, golden-section, Brent).
 
 ## Overview
 
-Metis is a routing engine that optimizes token swaps across heterogeneous liquidity pools (CPMM, CLMM, CLOB) by:
-- Finding multiple candidate paths using graph algorithms (Bellman-Ford, DFS-based K-shortest paths)
-- Allocating capital across paths using a marginal-rate-based waterfill algorithm
+Metis is a routing engine that optimizes token swaps across heterogeneous liquidity pools (CPMM, CLMM, CLOB, Curve-style stable pools) by:
+- Incrementally discovering best paths using a streaming variant of Bellman-Ford with dynamic pruning
+- Allocating capital across paths using configurable optimizers (waterfill, golden-section search, Brent search, or hybrid)
 - Supporting complex multi-hop routes with configurable constraints
 
 ## Features
@@ -15,11 +15,13 @@ Metis is a routing engine that optimizes token swaps across heterogeneous liquid
   - CPMM (Constant Product Market Maker) - e.g., Uniswap V2
   - CLMM (Concentrated Liquidity Market Maker) - e.g., Uniswap V3
   - CLOB (Central Limit Order Book) - order book with multiple price levels
+  - Curve-style stable swap pools with amplification-based invariant
 
 - **Advanced Routing**:
-  - Bellman-Ford algorithm for optimal path finding
-  - K-shortest paths for candidate generation
-  - Waterfill algorithm for optimal capital allocation across routes
+  - Streaming Bellman-Ford search with incremental candidate generation and deduplication
+  - DFS-based K-shortest path fallback for additional diversity
+  - Waterfill, golden-section, Brent, and hybrid allocation strategies
+  - High-precision split control with adaptive step sizing
   - Virtual fill simulation to account for pool state changes
 
 - **Flexible Configuration**:
@@ -27,7 +29,7 @@ Metis is a routing engine that optimizes token swaps across heterogeneous liquid
   - Maximum number of concurrent paths
   - Intermediate token whitelisting
   - Slippage tolerance control
-  - Step size for marginal rate calculation
+  - Customizable split precision (bps) and allocation algorithm selection
 
 ## Project Structure
 
@@ -40,13 +42,16 @@ Metis_rust/
 │   │   ├── graph.rs          # RoutingGraph using petgraph
 │   │   ├── constraints.rs    # Routing configuration
 │   │   ├── candidates.rs     # Path finding algorithms
-│   │   ├── splitter.rs       # Waterfill capital allocation
+│   │   ├── incremental.rs    # Streaming route builder
+│   │   ├── optimization.rs   # Continuous optimizers for splits
+│   │   ├── splitter.rs       # Allocation orchestration & waterfill
 │   │   ├── plan.rs           # RoutePlan data structures
 │   │   └── router.rs         # Main routing entry point
 │   ├── adapters/
 │   │   ├── cpmm.rs           # Constant Product AMM
 │   │   ├── clmm.rs           # Concentrated Liquidity AMM
-│   │   └── clob.rs           # Order Book implementation
+│   │   ├── clob.rs           # Order Book implementation
+│   │   └── curve.rs          # Curve-style stable swap adapter
 │   └── sim/
 │       └── demo.rs           # Demo graph builder and scenarios
 ├── examples/
@@ -72,15 +77,23 @@ This runs three scenarios demonstrating different pool configurations and their 
 cargo test
 ```
 
-All 3 integration tests verify:
+Integration tests verify:
 - Route structure and allocation correctness
 - Intermediate token whitelist enforcement
 - Maximum paths limit enforcement
+- Alternate optimization algorithms (golden-section)
 
 ### Using as a Library
 
 ```rust
-use metis::{RoutingGraph, CPMMPool, plan_routes, RoutingConstraints};
+use metis::{
+    plan_routes,
+    CPMMPool,
+    OptimizationAlgorithm,
+    RoutingConstraints,
+    RoutingGraph,
+    SplitConfig,
+};
 
 // Create a routing graph
 let mut rg = RoutingGraph::new();
@@ -102,6 +115,8 @@ rg.add_pool_edge(
 let mut constraints = RoutingConstraints::default();
 constraints.max_hops = 3;
 constraints.max_paths = 4;
+constraints.optimization_algorithm = OptimizationAlgorithm::GoldenSection;
+constraints.split_config = Some(SplitConfig::default());
 
 // Find optimal routes
 let plan = plan_routes(&mut rg, "TokenA", "TokenB", 500.0, Some(constraints));

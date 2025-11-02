@@ -1,19 +1,10 @@
 use crate::core::constraints::RoutingConstraints;
 use crate::core::graph::RoutingGraph;
+use crate::core::incremental::{rate_weight, StreamingRouteBuilder};
 use crate::core::pool::Edge;
 use std::collections::{HashMap, HashSet};
 
-const TINY: f64 = 1e-6;
-
-fn rate_weight(rg: &RoutingGraph, pool_id: &str, tiny: f64) -> f64 {
-    if let Some(pool) = rg.pools.get(pool_id) {
-        let rate = pool.marginal_rate(0.0).max(pool.quote(tiny).effective_rate);
-        let rate = rate.max(1e-18);
-        -rate.ln()
-    } else {
-        f64::INFINITY
-    }
-}
+const BF_TINY: f64 = 1e-6;
 
 /// Bellman-Ford baseline algorithm to find the theoretically optimal path
 pub fn bf_baseline(
@@ -50,7 +41,7 @@ pub fn bf_baseline(
                 if !constraints.is_allowed_node(&e.dst, src, dst) {
                     continue;
                 }
-                let w = rate_weight(rg, &e.pool_id, TINY);
+                let w = rate_weight(rg, &e.pool_id, BF_TINY);
                 let cand_dist = cur_dist + w;
                 let cand_hops = cur_hops + 1;
                 if cand_hops > constraints.max_hops {
@@ -210,26 +201,36 @@ pub fn generate_candidate_paths(
     dst: &str,
     constraints: &RoutingConstraints,
 ) -> Vec<Vec<Edge>> {
-    let (base, _) = bf_baseline(rg, src, dst, constraints);
-    let yen_paths = yen_k_paths(rg, src, dst, constraints);
-
-    // Find direct edges
-    let mut direct = Vec::new();
-    for ((s, d, _), e) in &rg.edges {
-        if s == src && d == dst {
-            direct.push(vec![e.clone()]);
-        }
+    let max_candidates = constraints.max_paths.max(constraints.candidate_pool_size);
+    if max_candidates == 0 {
+        return Vec::new();
     }
 
-    let mut merged = Vec::new();
+    let mut merged: Vec<Vec<Edge>> = Vec::new();
+
+    // Primary: streaming builder (incremental route construction)
+    let streaming = StreamingRouteBuilder::new(rg, src, dst, constraints).collect(max_candidates);
+    merged.extend(streaming);
+
+    // Ensure the Bellman-Ford baseline path is always part of the candidate set
+    let (base, _) = bf_baseline(rg, src, dst, constraints);
     if !base.is_empty() {
         merged.push(base);
     }
-    merged.extend(yen_paths);
-    merged.extend(direct);
+
+    // Include direct edges if they exist (cheap and often optimal)
+    for ((s, d, _), e) in &rg.edges {
+        if s == src && d == dst {
+            merged.push(vec![e.clone()]);
+        }
+    }
+
+    // Fall back to DFS-based K paths if we still need more diversity
+    if merged.len() < max_candidates {
+        let yen_paths = yen_k_paths(rg, src, dst, constraints);
+        merged.extend(yen_paths);
+    }
 
     let merged = dedupe_paths(merged);
-
-    let max_candidates = constraints.max_paths.max(constraints.candidate_pool_size);
     merged.into_iter().take(max_candidates).collect()
 }

@@ -17,7 +17,12 @@ fn main() {
         None,
         Some(vec![(1.010, 800.0), (1.005, 500.0), (1.000, 1e9)]),
     );
-    run_scenario("Scenario 2a: CLOB L1 size=800 @1.010", &mut rg2a, 500.0, false);
+    run_scenario(
+        "Scenario 2a: CLOB L1 size=800 @1.010",
+        &mut rg2a,
+        500.0,
+        false,
+    );
     println!();
 
     // Scenario 2b: Lower CLOB first level price to 1.005, observe rebalancing

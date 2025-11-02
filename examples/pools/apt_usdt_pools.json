@@ -1,0 +1,66 @@
+{
+  "pools": [
+    {
+      "type": "V2",
+      "id": "pancakeswap_apt_usdt",
+      "token_in": "APT",
+      "token_out": "USDT",
+      "reserve_in": 1000000.0,
+      "reserve_out": 5000000.0,
+      "fee": 0.0025
+    },
+    {
+      "type": "V2",
+      "id": "uniswap_apt_usdt",
+      "token_in": "APT",
+      "token_out": "USDT",
+      "reserve_in": 800000.0,
+      "reserve_out": 4100000.0,
+      "fee": 0.003
+    },
+    {
+      "type": "V3",
+      "id": "uniswap_v3_apt_usdt",
+      "token_in": "APT",
+      "token_out": "USDT",
+      "current_sqrt_price": 2.236,
+      "fee": 0.003,
+      "ticks": [
+        {
+          "index": -200,
+          "net_liquidity": 30000.0
+        },
+        {
+          "index": -100,
+          "net_liquidity": 50000.0
+        },
+        {
+          "index": 0,
+          "net_liquidity": 100000.0
+        },
+        {
+          "index": 100,
+          "net_liquidity": -50000.0
+        },
+        {
+          "index": 200,
+          "net_liquidity": -30000.0
+        }
+      ]
+    },
+    {
+      "type": "CLOB",
+      "id": "orderbook_apt_usdt",
+      "token_in": "APT",
+      "token_out": "USDT",
+      "fee": 0.001,
+      "levels": [
+        [5.02, 10000.0],
+        [5.01, 15000.0],
+        [5.00, 20000.0],
+        [4.99, 18000.0],
+        [4.98, 12000.0]
+      ]
+    }
+  ]
+}

@@ -1,8 +1,9 @@
 use crate::core::pool::{PoolLike, Quote};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Central Limit Order Book (Top N levels)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CLOBTopN {
     pub id: String,
     pub steps: Vec<(f64, f64)>, // [(out_per_in, max_out_remaining)]

@@ -1,6 +1,8 @@
 pub mod candidates;
 pub mod constraints;
 pub mod graph;
+pub mod incremental;
+pub mod optimization;
 pub mod plan;
 pub mod pool;
 pub mod router;

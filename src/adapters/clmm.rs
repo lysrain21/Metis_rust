@@ -1,9 +1,10 @@
 use crate::core::pool::{PoolLike, Quote};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Concentrated Liquidity Market Maker (simple approximation)
 /// MVP: treats the current active range as a local curve approximation (similar to CPMM)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CLMMSimpleApprox {
     pub id: String,
     pub x: f64,

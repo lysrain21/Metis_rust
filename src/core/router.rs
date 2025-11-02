@@ -2,7 +2,7 @@ use crate::core::candidates::generate_candidate_paths;
 use crate::core::constraints::RoutingConstraints;
 use crate::core::graph::RoutingGraph;
 use crate::core::plan::RoutePlan;
-use crate::core::splitter::waterfill;
+use crate::core::splitter::allocate_routes;
 
 /// Main entry point for routing
 pub fn plan_routes(
@@ -14,5 +14,5 @@ pub fn plan_routes(
 ) -> RoutePlan {
     let constraints = constraints.unwrap_or_default();
     let candidates = generate_candidate_paths(rg, src_token, dst_token, &constraints);
-    waterfill(rg, &candidates, amount_in, &constraints, None)
+    allocate_routes(rg, &candidates, amount_in, &constraints)
 }

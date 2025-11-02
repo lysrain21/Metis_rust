@@ -10,6 +10,23 @@ pub struct RoutingGraph {
     node_map: HashMap<String, NodeIndex>,
 }
 
+impl Clone for RoutingGraph {
+    fn clone(&self) -> Self {
+        let pools = self
+            .pools
+            .iter()
+            .map(|(id, pool)| (id.clone(), pool.clone_box()))
+            .collect();
+
+        Self {
+            g: self.g.clone(),
+            edges: self.edges.clone(),
+            pools,
+            node_map: self.node_map.clone(),
+        }
+    }
+}
+
 impl RoutingGraph {
     pub fn new() -> Self {
         Self {
@@ -35,12 +52,7 @@ impl RoutingGraph {
         self.pools.insert(pool_id.clone(), pool);
 
         let key = (src.to_string(), dst.to_string(), name.to_string());
-        let edge = Edge::new(
-            src.to_string(),
-            dst.to_string(),
-            pool_id,
-            name.to_string(),
-        );
+        let edge = Edge::new(src.to_string(), dst.to_string(), pool_id, name.to_string());
         self.edges.insert(key.clone(), edge);
 
         let src_idx = self.get_or_create_node(src);
@@ -51,7 +63,9 @@ impl RoutingGraph {
     pub fn outgoing(&self, node: &str) -> Vec<Edge> {
         let mut result = Vec::new();
         if let Some(&node_idx) = self.node_map.get(node) {
-            let mut edges = self.g.neighbors_directed(node_idx, petgraph::Direction::Outgoing);
+            let mut edges = self
+                .g
+                .neighbors_directed(node_idx, petgraph::Direction::Outgoing);
             while let Some(_) = edges.next() {
                 // Get the edge data
                 let mut walker = self

@@ -1,13 +1,14 @@
 use crate::core::pool::{PoolLike, Quote};
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Constant Product Market Maker pool
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CPMMPool {
     pub id: String,
-    pub x: f64,          // reserve_in
-    pub y: f64,          // reserve_out
-    pub fee: f64,        // e.g. 0.003
+    pub x: f64,   // reserve_in
+    pub y: f64,   // reserve_out
+    pub fee: f64, // e.g. 0.003
     pub kind: String,
     pub meta: HashMap<String, String>,
 }

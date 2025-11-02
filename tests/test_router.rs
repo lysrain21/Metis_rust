@@ -1,4 +1,4 @@
-use metis::core::constraints::RoutingConstraints;
+use metis::core::constraints::{OptimizationAlgorithm, RoutingConstraints, SplitConfig};
 use metis::core::router::plan_routes;
 use metis::sim::demo::build_graph;
 use std::collections::HashSet;
@@ -14,7 +14,10 @@ fn test_plan_routes_structure() {
 
     let plan = plan_routes(&mut rg, "A", "B", 500.0, Some(constraints.clone()));
 
-    assert!(!plan.routes.is_empty(), "expected at least one route allocation");
+    assert!(
+        !plan.routes.is_empty(),
+        "expected at least one route allocation"
+    );
     assert_eq!(plan.routes.len(), plan.legs().len());
     assert_eq!(plan.routes.len(), plan.allocations().len());
 
@@ -89,5 +92,33 @@ fn test_max_paths_limit_enforced() {
             .get("max_paths")
             .and_then(|s| s.parse::<usize>().ok()),
         Some(constraints.max_paths)
+    );
+}
+
+#[test]
+fn test_plan_routes_with_golden_section_algorithm() {
+    let mut rg = build_graph(None, None, None);
+    let mut constraints = RoutingConstraints::default();
+    constraints.max_hops = 3;
+    constraints.max_paths = 3;
+    constraints.candidate_pool_size = 6;
+    constraints.optimization_algorithm = OptimizationAlgorithm::GoldenSection;
+    constraints.split_config = Some(SplitConfig {
+        min_precision_bps: 1,
+        max_splits: 512,
+        adaptive: true,
+    });
+
+    let plan = plan_routes(&mut rg, "A", "B", 550.0, Some(constraints));
+    assert!(!plan.routes.is_empty());
+    assert_eq!(
+        plan.metadata.get("algo").map(|s| s.as_str()),
+        Some("golden_section_v1")
+    );
+    assert_eq!(
+        plan.metadata
+            .get("optimization_algorithm")
+            .map(|s| s.as_str()),
+        Some("golden_section")
     );
 }
